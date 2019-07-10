@@ -19,9 +19,16 @@ class Blog(db.Model):
 
 @app.route("/blog")
 def index():
+  # when the GET request comes without a query param:
+  if not request.args.get('id'):
     blogs = Blog.query.all()
-    
     return render_template('blog.html',title="Build-a-blog", blogs=blogs)
+  
+  # when the GET request comes from /newpost with a query param, use the ID to get the relevant Blog object to pass to the entryview template :
+  else:
+    blog_id = request.args.get('id')
+    blog = Blog.query.filter_by(id=blog_id).first()
+    return render_template('entryview.html', blog=blog)
 
 @app.route("/newpost", methods=["GET","POST"])
 def new_post():
@@ -43,12 +50,14 @@ def new_post():
     if not blog_body:
       body_blank = "Just a title?!  If you don't have anything to say, why are you blogging?  (Please enter text for your blog entry!)"
     
-    # If no errors, post entry and redirect to blog, 
+    # If no errors, post entry and redirect to blog page with query param:
     if not title_blank and not body_blank:
       new_entry = Blog(blog_title, blog_body)
       db.session.add(new_entry)
       db.session.commit()
-      return redirect('/blog')
+
+      # Now the newly created entry has an ID, so pass it to the redirect:
+      return redirect('/blog?id=' + str(new_entry.id))
     
     # else redisplay form with errors:
     else:
