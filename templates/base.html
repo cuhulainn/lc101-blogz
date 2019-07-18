@@ -5,6 +5,7 @@
         <style>
             .error { color: red; font-weight: bold;}
             .success { color: green; font-weight: bold;}
+            .italics { font-style: italic; }
         </style>
     </head>
     <body>
@@ -19,8 +20,9 @@
                 {% endif %}
         </div>
         <nav>
-            <a href="/blog">Main Blog Page</a>
-            <a href="/newpost">Add a New Blog Entry</a>
+            <a href="/">Home</a>
+            <a href="/blog">All Posts</a>
+            <a href="/newpost">Add New Post</a>
         </nav>
 
         {% with messages = get_flashed_messages(with_categories=True) %}

@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -14,6 +15,7 @@ class Blog(db.Model):
   title = db.Column(db.String(255))
   body = db.Column(db.Text)
   owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+  published = db.Column(db.DateTime, default=datetime.utcnow)
 
   def __init__(self, title, body, owner):
       self.title = title
@@ -46,7 +48,7 @@ def login():
     
     # if user is not found:
     if not user:
-      flash("User not found, please try again, or click the link at right to sign up!", "error")
+      flash("User not found, please try again or click the 'Create Account' link in the top right to sign up!", "error")
 
     # if user is found and password is incorrect:
     if user and user.password != password:
@@ -58,7 +60,7 @@ def login():
       flash("Logged in!", "success")
       return redirect("/newpost")
     
-  return render_template("login.html")
+  return render_template("login.html", title="Login - EpiBlog")
 
 @app.route("/signup", methods=["GET","POST"])
 def signup():
@@ -70,17 +72,17 @@ def signup():
 
     existing_user = User.query.filter_by(email=email).first()
     
-    if not email or not password or not verify:
-      flash("You didn't complete the form, please try again!", "error")
-
-    if not password == verify:
-      flash("The passwords did not match, please try again!", "error")
-
     if existing_user:
       flash("That email address has already been registered, please login!", "error")
+    
+    if not existing_user and not email or not password or not verify:
+      flash("All fields are required.", "error")
 
-    if not 3 <= len(password) <= 20 or 3 <= len(email) <= 20:
-      flash("The fields must be between 3 and 20 characters, please try again!", "error") 
+    if not existing_user and not password == verify:
+      flash("The passwords did not match.", "error")
+
+    if not existing_user and not 3 <= len(password) or not 3 <= len(email):
+      flash("All fields must be at least 3 characters long.", "error") 
 
     if not existing_user and password == verify :
       new_user = User(email, password)
@@ -89,25 +91,36 @@ def signup():
       session["email"] = email
       return redirect("/newpost")
 
-  return render_template("signup.html")
+  return render_template("signup.html",title="Signup - EpiBlog")
 
 @app.route("/logout")
 def logout():
   del session['email']
   return redirect('/blog')
 
+@app.route("/")
+def index():
+  authors = User.query.all()
+  return render_template("index.html",title="Authors - EpiBlog",authors=authors)
+
 @app.route("/blog")
 def list_blogs():
-  # when the GET request comes without a query param:
-  if not request.args.get('id'):
+  # Handle a GET request that comes without a query param by displaying all blogs:
+  if not request.args.get('id') and not request.args.get('user'):
     blogs = Blog.query.all()
-    return render_template('blog.html',title="Build-a-blog", blogs=blogs)
+    return render_template('blog.html',title="Home- EpiBlog", blogs=blogs)
   
-  # when the GET request comes from /newpost with a query param, use the ID to get the relevant Blog object to pass to the entryview template :
+  # Handle a GET request that comes with user query parameter to display a dynamic user page:
+  if request.args.get('user'):
+    owner_id = request.args.get('user')
+    blogs = Blog.query.filter_by(owner_id=owner_id).all()
+    return render_template("authorview.html",title="User- EpiBlog", blogs=blogs)
+
+  # Handle a GET request that comes from /newpost with a query param, use the ID to get the relevant Blog object to pass to the entryview template :
   else:
     blog_id = request.args.get('id')
     blog = Blog.query.filter_by(id=blog_id).first()
-    return render_template('entryview.html', blog=blog)
+    return render_template('entryview.html',title="EpiBlog", blog=blog)
 
 @app.route("/newpost", methods=["GET","POST"])
 def new_post():
@@ -145,7 +158,7 @@ def new_post():
     else:
       return render_template('newpost.html',title="Add a new blog entry", title_blank=title_blank, body_blank=body_blank, blog_title=blog_title, blog_body=blog_body)
 
-  return render_template('newpost.html',title="Add a new blog entry")
+  return render_template('newpost.html',title="New entry - EpiBlog")
 
 if __name__ == '__main__':
     app.run()
