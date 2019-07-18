@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>{{title}}</title>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <style>
             .error { color: red; font-weight: bold;}
             .success { color: green; font-weight: bold;}
@@ -9,31 +10,35 @@
         </style>
     </head>
     <body>
-        <div style='float: right'>
+        <div class="w3-bar w3-teal">
+            <nav>
+                <a href="/" class="w3-bar-item w3-button">Home</a>
+                <a href="/blog" class="w3-bar-item w3-button">All Posts</a>
+                <a href="/newpost" class="w3-bar-item w3-button">Add New Post</a>
                 {% if 'email' in session %}
-                    Logged in as {{ session['email'] }}
-                    <form action="/logout">
+                    <span class="w3-bar-item w3-right w3-green"><form action="/logout">
                     <input type="submit" value="Log Out" />
-                    </form>
+                    </form></span>
+                    <span class="w3-bar-item w3-right w3-green">Logged in as {{ session['email'] }}</span>
                 {% else %}
-                    <a href="login">Login</a> | <a href="signup">Create Account</a>
+                    <a href="login" class="w3-bar-item w3-right w3-green">Login</a>
+                    <span class="w3-bar-item w3-right w3-green"> | </span>
+                    <a href="signup" class="w3-bar-item w3-right w3-green">Create Account</a>
                 {% endif %}
+            </nav>
         </div>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/blog">All Posts</a>
-            <a href="/newpost">Add New Post</a>
-        </nav>
-
-        {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-        <ul class=flashes>
-            {% for category,message in messages %}
-            <li class="{{category}}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endwith %}
+        
+        <div class="w3-panel">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+            <ul class=flashes>
+                {% for category,message in messages %}
+                <li class="{{category}}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </div>
         
         {% block content %}
         {% endblock %}
