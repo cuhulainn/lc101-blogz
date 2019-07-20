@@ -81,10 +81,10 @@ def signup():
     if not existing_user and not password == verify:
       flash("The passwords did not match.", "error")
 
-    if not existing_user and not 3 <= len(password) or not 3 <= len(email):
+    if not existing_user and not len(password) >= 3 or not len(email) >= 3:
       flash("All fields must be at least 3 characters long.", "error") 
 
-    if not existing_user and password == verify :
+    if not existing_user and password == verify and len(password) >= 3 and len(email) >= 3 :
       new_user = User(email, password)
       db.session.add(new_user)
       db.session.commit()
@@ -107,13 +107,13 @@ def index():
 def list_blogs():
   # Handle a GET request that comes without a query param by displaying all blogs:
   if not request.args.get('id') and not request.args.get('user'):
-    blogs = Blog.query.all()
+    blogs = Blog.query.order_by(Blog.published.desc()).all()
     return render_template('blog.html',title="Home- EpiBlog", blogs=blogs)
   
   # Handle a GET request that comes with user query parameter to display a dynamic user page:
   if request.args.get('user'):
     owner_id = request.args.get('user')
-    blogs = Blog.query.filter_by(owner_id=owner_id).all()
+    blogs = Blog.query.filter_by(owner_id=owner_id).order_by(Blog.published.desc()).all()
     return render_template("authorview.html",title="User- EpiBlog", blogs=blogs)
 
   # Handle a GET request that comes from /newpost with a query param, use the ID to get the relevant Blog object to pass to the entryview template :
